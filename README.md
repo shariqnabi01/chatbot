@@ -24,6 +24,40 @@ A simple real-time chat application using **Node.js**, **Express**, **Socket.IO*
 
 ---
 
+You can register this via /auth/signup:
+
+json
+Copy
+Edit
+{
+  "email": "testuser@example.com",
+  "password": "test1234"
+}
+Once signed up, use /auth/login to get the JWT token.
+
+🔐 Test JWT Token (if you skip login for now)
+If you want to skip signup/login temporarily and use a hardcoded token, you can use this sample generated with:
+
+js
+Copy
+Edit
+jwt.sign({ id: 1, email: "testuser@example.com" }, "your_jwt_secret")
+Sample JWT (for testing only):
+
+Copy
+Edit
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJ0ZXN0dXNlckBleGFtcGxlLmNvbSIsImlhdCI6MTY5MDAwMDAwMH0.3kEZNaR5e_kefLUv1ZtB6ka8_Azz9FEpi1RBCuy6svs
+🔒 Replace "your_jwt_secret" with your actual JWT_SECRET in .env or Docker env.
+
+🧪 You can create more users:
+json
+Copy
+Edit
+{
+  "email": "demo@example.com",
+  "password": "demo123"
+}
+
 ## 📂 Project Structure
 
 real-time-chat-bot/
