@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Real-Time Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #chat {
+      border: 1px solid #ccc;
+      padding: 10px;
+      width: 400px;
+      height: 300px;
+      overflow-y: scroll;
+      margin-top: 10px;
+    }
+    input, button {
+      padding: 8px;
+      margin-top: 5px;
+      width: 100%;
+    }
+    #messageInput {
+      width: 80%;
+    }
+    #sendBtn {
+      width: 18%;
+    }
+    .message {
+      margin-bottom: 5px;
+    }
+    .own {
+      font-weight: bold;
+    }
+    #error {
+      color: red;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Login</h2>
+  <input type="email" id="email" placeholder="Email" />
+  <input type="password" id="password" placeholder="Password" />
+  <button onclick="login()">Login</button>
+  <div id="error"></div>
+
+  <h2>Chat Room: general</h2>
+  <div id="chat"></div>
+
+  <input type="text" id="messageInput" placeholder="Type your message..." disabled />
+  <button id="sendBtn" onclick="sendMessage()" disabled>Send</button>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    let socket;
+    let token = "";
+    let email = "";
+    const chat = document.getElementById('chat');
+    const errorDiv = document.getElementById('error');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    function login() {
+      email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      errorDiv.textContent = '';
+
+      fetch('http://localhost:7000/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.token) {
+          token = data.token;
+          connectSocket();
+          messageInput.disabled = false;
+          sendBtn.disabled = false;
+        } else {
+          errorDiv.textContent = data.message || 'Login failed';
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        errorDiv.textContent = 'Login error. Please try again.';
+      });
+    }
+
+    function connectSocket() {
+      socket = io("http://localhost:7000", {
+        auth: { token },
+         reconnectionAttempts: 5,
+  reconnectionDelay: 1000,
+      });
+
+      socket.on("connect", () => {
+        socket.emit("join", { channelId: 1 });
+      });
+
+      socket.on("message", (msg) => {
+        const div = document.createElement("div");
+        div.className = "message";
+        if (msg.user === email) {
+          div.classList.add("own");
+        }
+        div.textContent = `${msg.user}: ${msg.text}`;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+      });
+
+      socket.on("connect_error", (err) => {
+        console.error("Socket connection error:", err.message);
+        errorDiv.textContent = "Socket connection failed.";
+      });
+    }
+
+    function sendMessage() {
+      const msg = messageInput.value;
+      if (msg.trim()) {
+        socket.emit("message", {
+          channelId: 1,
+          message: msg
+        });
+        messageInput.value = "";
+      }
+    }
+  </script>
+</body>
+</html>
